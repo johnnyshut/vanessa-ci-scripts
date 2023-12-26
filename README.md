@@ -51,6 +51,20 @@ vci prepare
 vci run
 ```
 
+### Переменные окружения
+
+Используются переменные:
+
+- GROUP_ACCESS_TOKEN, токен с правами "read_repository, write_repository", для использования [gitsync](https://github.com/oscript-library/gitsync).
+<!-- - OVM_INSTALL_VERSION, устанавливаемая версия OScript
+- OVM_USE_VERSION, используемая версия OScript -->
+- SONAR_HOST_URL, хост SonarQube
+- SONAR_TOKEN, токен доступа к SonarQube
+- GITSYNC_V8VERSION, версия 1С Предприятия (Например 8.3.23.1782)
+- GITSYNC_STORAGE_USER, GITSYNC_STORAGE_PASSWORD, пользователь и пароль к 1С Хранилищу для синхронизации с git (Например ci-bot)
+- GITSYNC_STORAGE_PATH, адрес 1С Хранилища
+- GITSYNC_WORKDIR, рабочий каталог в git репозитории для выгрузки исходников конфигурации (Например "./src/cf/")
+
 ## Возможности доработки библиотеки
 
 - откройте issue - если вам не хватает какого то функционала для вашего pipeline

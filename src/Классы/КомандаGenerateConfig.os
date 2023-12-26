@@ -22,6 +22,10 @@
 	Pipeline = Pipeline + ТекстЭтапа(КаталогШаблонов, "common.yml");
 	Pipeline = Pipeline + ТекстЭтапа(КаталогШаблонов, "schedules.yml");
 
+	// TODO 
+	// Шаги для установки OneScript и связанных пакетов из хаба
+	// Pipeline = Pipeline + ТекстЭтапа(КаталогШаблонов, "pre.yml");
+
 	Pipeline = Pipeline + ТекстЭтапа(КаталогШаблонов, "build.yml");
 	Pipeline = Pipeline + ТекстЭтапа(КаталогШаблонов, "syntax-check.yml");
 
