@@ -30,7 +30,7 @@ jobs:
         with:
           version: ${{ matrix.oscript_version }}
 
-      # Установка зависимостей пакета
+      # Установка зависимостей пакета 
       - name: Установка зависимостей
         run: |
           opm install opm
