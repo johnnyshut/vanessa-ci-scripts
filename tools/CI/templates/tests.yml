@@ -1,0 +1,63 @@
+
+Дымовые тесты:
+  except:
+    - schedules
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+  allow_failure: true
+  only:
+    refs:
+      - main
+  tags:
+    - OneS
+  script:
+    - vci run xunit
+  artifacts:
+    reports:
+      junit:
+        build/out/smoke/junit/*.xml
+    paths:
+      - build/out/smoke/allure/ 
+
+Модульные тесты:
+  except:
+    - schedules
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+  allow_failure: true
+  only:
+    refs:
+      - main
+  tags:
+    - OneS
+  script:
+    - vci run xunit-tests
+  artifacts:
+    reports:
+      junit:
+        build/out/smoke/junit/*.xml
+    paths:
+      - build/out/smoke/allure/ 
+
+Сценарные тесты:
+  except:
+    - schedules
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+  allow_failure: true
+  only:
+    refs:
+      - main
+  tags:
+    - OneS
+  script:
+    - vci run vanessa
+  artifacts:
+    reports:
+      junit:
+        build/out/bdd/junit/*.xml
+    paths:
+      - build/out/bdd/allure/ 

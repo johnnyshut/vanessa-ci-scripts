@@ -1,0 +1,38 @@
+stages:
+  - schedules
+  - templating
+  - performance
+
+default:
+  before_script:
+  - CHCP 65001
+
+gitsync:
+  stage: schedules
+  only:
+    - schedules
+  script:
+    - vci run sync
+
+Генерация пайплайна:
+  except:
+    - schedules
+  variables:
+    GIT_DEPTH: 2
+  stage: templating
+  script:
+    - vanessa-ci-scripts generate
+  timeout: 5m
+  artifacts:
+    paths:
+      - build/generate-config.yml
+
+Исполнение:
+  except:
+    - schedules
+  stage: performance
+  trigger:
+    include:
+      - artifact: build/generate-config.yml
+        job: Генерация пайплайна
+    strategy: depend

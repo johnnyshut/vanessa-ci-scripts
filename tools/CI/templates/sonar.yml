@@ -1,0 +1,16 @@
+
+SonarQube:
+  except:
+    - schedules
+  stage: report
+  variables:
+    GIT_STRATEGY: none
+    SONAR_SCANNER_OPTS: "-Dfile.encoding=UTF8 -Dsun.jnu.encoding=UTF8 -Xmx6G"
+  allow_failure: true
+  only:
+    refs:
+      - main
+  tags:
+    - OneS
+  script:
+    - vci run sonar

@@ -1,0 +1,42 @@
+
+Блокировка сеансов:
+  except:
+    - schedules
+  stage: deploy
+  variables:
+    GIT_STRATEGY: none
+  only:
+    refs:
+      - main
+  tags:
+    - OneS
+  script:
+    - echo 'Блокировка сеансов 1С предприятия testnew ИБ'
+
+Обновление ИБ:
+  except:
+    - schedules
+  stage: deploy
+  variables:
+    GIT_STRATEGY: none
+  only:
+    refs:
+      - main
+  tags:
+    - OneS
+  script:
+    - echo 'Обновление ИБ 1С предприятия testnew ИБ'
+
+Run:
+  except:
+    - schedules
+  stage: deploy
+  variables:
+    GIT_STRATEGY: none
+  only:
+    refs:
+      - main
+  tags:
+    - OneS
+  script:
+    - echo 'Запуск ИБ 1С предприятия testnew ИБ'

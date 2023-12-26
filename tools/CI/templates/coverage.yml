@@ -1,0 +1,15 @@
+
+Coverage:
+  except:
+    - schedules
+  stage: report
+  variables:
+    GIT_STRATEGY: none
+  allow_failure: true
+  only:
+    refs:
+      - main
+  tags:
+    - OneS
+  script:
+    - vci run coverage

@@ -1,0 +1,19 @@
+
+Синтаксический контроль:
+  except:
+    - schedules
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+  allow_failure: true
+  only:
+    refs:
+      - main
+  tags:
+    - OneS
+  script:
+    - vci run syntax-check
+  artifacts:
+    reports:
+      junit:
+        build/out/syntax-check/junit/junit.xml

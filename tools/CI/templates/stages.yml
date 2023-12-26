@@ -1,0 +1,7 @@
+
+stages:
+  - schedules 
+  - build
+  - test
+  - report
+  - deploy

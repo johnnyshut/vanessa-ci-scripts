@@ -1,0 +1,9 @@
+
+# TODO pipeline при исполнении не видит этот шаг
+gitsync:
+  stage: schedules
+  only:
+    - schedules
+  script:
+    - vci run close-all-1c-process
+    - vci run sync

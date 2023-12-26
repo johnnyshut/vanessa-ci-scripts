@@ -1,0 +1,275 @@
+{
+    "version": "2.0.0",
+    "_runner": "terminal",
+    "windows": {
+        "command": "cmd",
+        "args": ["/c", "chcp 65001"]
+    },
+    "linux": {
+        "command": "sh",
+        "args": ["-c"]
+    },
+    "isShellCommand": true,
+    "showOutput": "silent",
+    "tasks": [
+        {
+            "taskName": "Testing project (opm test)",
+            "args": [
+                // "oscript",
+                // "src/opm.os",
+                "opm",
+                "test"
+            ],
+            // "echoCommand": true,
+            // "showOutput": "always",
+            "suppressTaskName": true,
+            // "isTestCommand": false,
+            "problemMatcher": {
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "{Модуль\\s+(.+)\\s\\/\\s.*:\\s+(\\d+)\\s+\\/\\s+([^{]*)",
+                    "file": 1,
+                    "location": 2,
+                    "message": 3
+                }
+            }
+        },
+        {
+            "taskName": "Testing project",
+            "args": [
+                "1testrunner",
+                "-runall",
+                "${workspaceRoot}/tests"
+            ],
+            "echoCommand": true,
+            "showOutput": "always",
+            "suppressTaskName": true,
+            // "isBuildCommand": false,
+            "isTestCommand": false,
+            "problemMatcher": {
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "{Модуль\\s+(.+)\\s\\/\\s.*:\\s+(\\d+)\\s+\\/\\s+([^{]*)",
+                    "file": 1,
+                    "location": 2,
+                    "message": 3
+                }
+            }
+        },
+        {
+            "taskName": "Testing current test-file",
+            "args": [
+                "1testrunner",
+                "-run",
+                "${file}",
+            ],
+            "echoCommand": true,
+            "showOutput": "always",
+            "suppressTaskName": true,
+            "isBuildCommand": false,
+            "isTestCommand": true,
+            "problemMatcher": {
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "{Модуль\\s+(.+)\\s\\/\\s.*:\\s+(\\d+)\\s+\\/\\s+([^{]*)",
+                    "file": 1,
+                    "location": 2,
+                    "message": 3
+                }
+            }
+        },
+        {
+            "taskName": "Exec all features",
+            "args": [
+                "1bdd",
+                "${workspaceRoot}/features",
+                "-out", 
+                "${workspaceRoot}/exec.log"
+            ],
+            "echoCommand": true,
+            "showOutput": "always",
+            "suppressTaskName": true,
+            "isBuildCommand": true,
+            "isTestCommand": false,
+            "problemMatcher": {
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "{Модуль\\s+(.+)\\s\\/\\s.*:\\s+(\\d+)\\s+\\/\\s+([^{]*)",
+                    "file": 1,
+                    "location": 2,
+                    "message": 3
+                }
+            }
+        },
+        {
+            "taskName": "Exec feature",
+            "args": [
+                "1bdd",
+                "${file}",
+                "-out", 
+                "${workspaceRoot}/exec.log"
+            ],
+            "echoCommand": true,
+            "showOutput": "always",
+            "suppressTaskName": true,
+            "isBuildCommand": false,
+            "isTestCommand": true,
+            "problemMatcher": {
+                "fileLocation": "absolute",
+                "pattern": [
+                {
+                    "regexp": "{Модуль\\s+(.+)\\s\\/\\s.*:\\s+(\\d+)\\s+\\/\\s+([^{]*)",
+                    "file": 1,
+                    "location": 2,
+                    "message": 3
+                }
+                ]
+            }
+        },
+        {
+            "taskName": "Generate feature steps",
+            "args": [
+                "1bdd",
+                "gen",
+                "${file}",
+                "-out", 
+                "${workspaceRoot}/exec.log"
+            ],
+            "echoCommand": true,
+            "showOutput": "always",
+            "suppressTaskName": true,
+            "isBuildCommand": false,
+            "isTestCommand": false,
+            "problemMatcher": {
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "{Модуль\\s+(.+)\\s\\/\\s.*:\\s+(\\d+)\\s+\\/\\s+([^{]*)",
+                    "file": 1,
+                    "location": 2,
+                    "message": 3
+                }
+            }
+        },
+        {
+            "taskName": "OneScript: compile",
+            "args": [
+                "oscript",
+                "-encoding=utf-8",
+                "-compile",
+                "${file}"
+            ],
+            "echoCommand": true,
+            "showOutput": "always",
+            "suppressTaskName": true,
+            "isBuildCommand": false
+        },
+        {
+            "taskName": "OneScript: check",
+            "args": [
+                "oscript",
+                "-encoding=utf-8",
+                "-check",
+                "${file}"
+            ],
+            "echoCommand": true,
+            "showOutput": "always",
+            "suppressTaskName": true,
+            "isBuildCommand": false
+        },
+        {
+            "taskName": "OneScript: make",
+            "args": [
+                "oscript",
+                "-encoding=utf-8",
+                "-make",
+                "${file}",
+                "${fileBasename}.exe"
+            ],
+            "echoCommand": true,
+            "showOutput": "always",
+            "suppressTaskName": true,
+            "isBuildCommand": false
+        },
+        {
+            "taskName": "OneScript: run",
+            "args": [
+                "oscript",
+                "-encoding=utf-8",
+                "${file}"
+            ],
+            "echoCommand": true,
+            "showOutput": "always",
+            "suppressTaskName": true,
+            "isBuildCommand": true,
+            "problemMatcher": {
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "^{Модуль\\s+(.*)\\s\\/\\s.*:\\s+(\\d+)\\s+\\/\\s+(.*)}$",
+                    "file": 1,
+                    "location": 2,
+                    "message": 3
+                }
+            }
+        },
+        {
+            "taskName": "OneScript: build",
+            "args": [
+                "opm build",
+                "--mf .\\packagedef --out .\\build"
+            ],
+            "echoCommand": true,
+            "showOutput": "always",
+            "suppressTaskName": true,
+            "isBuildCommand": true,
+            "problemMatcher": {
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "^{Модуль\\s+(.*)\\s\\/\\s.*:\\s+(\\d+)\\s+\\/\\s+(.*)}$",
+                    "file": 1,
+                    "location": 2,
+                    "message": 3
+                }
+            }
+        },
+        {
+            "taskName": "OneScript: install from ospx",
+            "args": [
+                "opm install ",
+                "-f .\\build\\vanessa-ci-scripts-1.0.1.ospx"
+            ],
+            "echoCommand": true,
+            "showOutput": "always",
+            "suppressTaskName": true,
+            "isBuildCommand": true,
+            "problemMatcher": {
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "^{Модуль\\s+(.*)\\s\\/\\s.*:\\s+(\\d+)\\s+\\/\\s+(.*)}$",
+                    "file": 1,
+                    "location": 2,
+                    "message": 3
+                }
+            }
+        },
+        {
+            "taskName": "OneScript: install module",
+            "args": [
+                "opm install",
+                "-l"
+            ],
+            "echoCommand": true,
+            "showOutput": "always",
+            "suppressTaskName": true,
+            "isBuildCommand": true,
+            "problemMatcher": {
+                "fileLocation": "absolute",
+                "pattern": {
+                    "regexp": "^{Модуль\\s+(.*)\\s\\/\\s.*:\\s+(\\d+)\\s+\\/\\s+(.*)}$",
+                    "file": 1,
+                    "location": 2,
+                    "message": 3
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,18 @@
+
+pages:
+  except:
+    - schedules
+  stage: deploy
+  variables:
+    GIT_STRATEGY: none
+  allow_failure: true
+  only:
+    refs:
+      - main
+  tags:
+    - OneS
+  script:
+    - vci run pages
+  artifacts:
+    paths:
+      - public

@@ -1,0 +1,113 @@
+
+before_script:
+  - CHCP 65001
+
+stages:
+  - .pre
+  - build
+  - report
+  - release
+
+install-oscript:
+  stage: .pre
+  when: manual
+  tags:
+    - OneScript
+  variables:
+    OVM_DOWNLOAD_URL: https://github.com/oscript-library/ovm/releases/download/v1.2.1/ovm.exe
+    OPM_DOWNLOAD_URL: https://github.com/oscript-library/opm/releases/download/v1.0.4/opm-1.0.4.ospx
+  script: 
+    - tools\scripts\install-oscript-local.bat
+  timeout: 10m
+
+install-package-dependencies:
+  stage: .pre
+  when: manual
+  tags:
+    - OneScript 
+  script: 
+    - opm install opm;
+      opm install
+  timeout: 10m
+
+build:
+  stage: build
+  rules:
+    - if: '$CI_COMMIT_TAG != null'
+  tags:
+    - OneScript
+  script: 
+    - tools\scripts\build-package.bat
+    # get the job id and save it as environment statement
+    - echo BUILD_JOB_ID=$CI_JOB_ID >> CI_JOB_ID.env
+  timeout: 10m
+  artifacts:
+    paths:
+      - .\build\vanessa-ci-scripts-$CI_COMMIT_TAG.ospx
+      - CHANGELOG.md
+      - README.md
+    name: vanessa-ci-scripts
+    reports:
+      # export the environment statement so we can access it in the release stage
+      dotenv: CI_JOB_ID.env
+    expire_in: 30 day
+
+SonarQube:
+  stage: report
+  rules:
+    - !reference [build, rules]
+  variables:
+    GIT_STRATEGY: clone
+    SONAR_SCANNER_OPTS: "-Dfile.encoding=UTF8 -Dsun.jnu.encoding=UTF8 -Xmx6G"
+  allow_failure: true
+  tags:
+    - OneScript
+  script:
+    - $VERSION = sls -Path .\opm-metadata.xml -Pattern "<Version>(?<ver>\d\.\d\.\d)" -All | % { $_.Matches.Groups } | ? {$_.Name -eq "ver" } | % Value
+    - echo $VERSION
+    - sonar-scanner -D sonar.token=$SONAR_TOKEN -D sonar.projectVersion=$VERSION
+
+package:
+  stage: release
+  rules:
+    - !reference [build, rules]
+  tags:
+    - OneScript
+  script:
+    # Use variables to build a URL to access the artifacts
+    # ${CI_PROJECT_URL} is the repository URL
+    # ${BUILD_JOB_ID} is from the previous job,
+    # the build stage, that contains the artifact
+    - Invoke-WebRequest -outfile artifacts.zip -Header @{"PRIVATE-TOKEN"=$PROJ_AUTH} -Method Get -uri "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/jobs/${BUILD_JOB_ID}/artifacts"
+    - Invoke-WebRequest -UseBasicParsing -Header @{"JOB-TOKEN"=$CI_JOB_TOKEN} -Infile artifacts.zip -Method Put -uri "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/$CI_COMMIT_TAG/$CI_COMMIT_TAG/vanessa-ci-scripts.zip"
+  timeout: 10m
+  needs:
+    - job: build
+      artifacts: true
+
+release:
+  stage: release
+  rules: 
+    - !reference [build, rules]
+  tags:
+    - OneScript
+  script:
+    - echo "release release_job for $CI_COMMIT_TAG"
+    # - $file = "${CI_PROJECT_URL}/-/jobs/${BUILD_JOB_ID}/artifacts/file/build/vanessa-ci-scripts-${CI_COMMIT_TAG}.ospx"    
+    - $file = "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/$CI_COMMIT_TAG/$CI_COMMIT_TAG/vanessa-ci-scripts.zip"
+    - echo $file
+    - $assets = @{}
+    - $assets.Add("name", "vanessa-ci-scripts.zip")
+    - $assets.Add("url", $file)
+    - $assets = $assets | ConvertTo-Json
+    - $assets = $assets.replace('"','\"')
+    - release-cli create 
+      --name "Release $CI_COMMIT_TAG" 
+      --description "[CHANGELOG.md]($CI_PROJECT_URL/-/raw/$CI_DEFAULT_BRANCH/CHANGELOG.md)"
+      --tag-name "$CI_COMMIT_TAG" 
+      --ref "$CI_COMMIT_SHA"
+      --assets-link=$assets
+    - echo "application successfully released."
+  timeout: 10m
+  needs:
+    - job: package

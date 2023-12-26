@@ -1,0 +1,32 @@
+
+Создание тестовой базы:
+  except:
+    - schedules
+  stage: build
+  variables:
+    GIT_STRATEGY: none
+#     GIT_DEPTH: "1000000"  # Tells git to fetch all the branches of the project, required by the analysis task
+  only:
+    refs:
+      - main
+  tags:
+    - OneS
+  script:
+    - vci run close-all-1c-process
+    - vci run create-base
+
+Компиляция внешних файлов:
+  except:
+    - schedules
+  stage: build
+  variables:
+    GIT_STRATEGY: none
+  only:
+    refs:
+      - main
+  tags:
+    - OneS
+  script:
+    - vci run compilecf
+    - vci run compilecfe
+    - vci run compileepf
