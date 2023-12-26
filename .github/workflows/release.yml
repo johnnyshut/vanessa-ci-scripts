@@ -38,8 +38,7 @@ jobs:
 
       - name: Сборка пакета
         run: |
-          mkdir ".\build"
-          opm build --mf .\packagedef --out .\build
+          opm build --mf .\packagedef
 
       - name: Заливка артифактов
         uses: actions/upload-artifact@v2
