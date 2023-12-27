@@ -3,7 +3,7 @@
 Набор скриптов Continuous Integration for 1C. Устанавливается как библиотека OScript на компьютер с ролью gitlab-runner.
 Предназначена для быстрого перехода к использованию gitlab pipeline.
 
-![preview-pipeline](doc\image\preview-pipeline.png "preview-pipeline")
+![preview-pipeline](./doc/image/preview-pipeline.png "preview-pipeline")
 
 ## Использование библиотеки
 
