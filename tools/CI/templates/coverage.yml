@@ -1,15 +1,20 @@
 
 Coverage:
-  except:
-    - schedules
-  stage: report
+  stage: test
   variables:
     GIT_STRATEGY: none
   allow_failure: true
-  only:
-    refs:
-      - main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+    - changes:
+      - features/**/*
+      - fixtures/**/*
+      - src/**/*
+      - tests/**/*
   tags:
     - OneS
   script:
     - vci run coverage
+  needs:
+    - job: Создание тестовой базы
+    - Компиляция внешних файлов

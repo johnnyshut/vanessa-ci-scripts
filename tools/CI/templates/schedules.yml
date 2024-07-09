@@ -1,9 +1,12 @@
 
-# TODO pipeline при исполнении не видит этот шаг
 gitsync:
   stage: schedules
-  only:
-    - schedules
+  variables:
+    GIT_STRATEGY: none
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+  tags:
+    - OneS
   script:
     - vci run close-all-1c-process
     - vci run sync

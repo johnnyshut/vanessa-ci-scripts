@@ -1,32 +1,34 @@
 
 Создание тестовой базы:
-  except:
-    - schedules
   stage: build
   variables:
     GIT_STRATEGY: none
-#     GIT_DEPTH: "1000000"  # Tells git to fetch all the branches of the project, required by the analysis task
-  only:
-    refs:
-      - main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+    - changes:
+      - features/**/*
+      - fixtures/**/*
+      - src/**/*
+      - tests/**/*
   tags:
     - OneS
   script:
     - vci run close-all-1c-process
     - vci run create-base
+    - vci run launch-IB-update
 
 Компиляция внешних файлов:
-  except:
-    - schedules
   stage: build
   variables:
     GIT_STRATEGY: none
-  only:
-    refs:
-      - main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+    - changes:
+      - src/**/*
   tags:
     - OneS
   script:
+    - vci run close-all-1c-process
     - vci run compilecf
     - vci run compilecfe
     - vci run compileepf

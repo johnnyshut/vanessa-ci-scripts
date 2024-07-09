@@ -1,16 +1,20 @@
 
 SonarQube:
-  except:
-    - schedules
   stage: report
   variables:
-    GIT_STRATEGY: none
     SONAR_SCANNER_OPTS: "-Dfile.encoding=UTF8 -Dsun.jnu.encoding=UTF8 -Xmx6G"
+    GIT_STRATEGY: none
   allow_failure: true
-  only:
-    refs:
-      - main
+  rules:
+    - if: '$CI_PIPELINE_SOURCE != "schedule" && $CI_PIPELINE_SOURCE != "push" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - changes:
+      - features/**/*
+      - fixtures/**/*
+      - src/**/*
+      - tests/**/*
   tags:
     - OneS
   script:
     - vci run sonar
+  needs:
+    - job: Allure

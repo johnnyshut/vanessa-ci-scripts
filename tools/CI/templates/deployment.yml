@@ -1,0 +1,43 @@
+
+1. Блокировка сеансов [job]:
+  stage: [stage]
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+  tags:
+    - OneS
+  script:
+    - vci run session-lock [setting]
+    - vci run session-kill [setting]
+
+2. Обновление ИБ [job]:
+  stage: [stage]
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+  tags:
+    - OneS
+  script:
+    - vci run loadrepo [setting]
+    - vci run updatedb [setting]
+  needs:
+    - job: 1. Блокировка сеансов [job]
+
+3. Запуск ИБ [job]:
+  stage: [stage]
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+  tags:
+    - OneS
+  script:
+    - vci run launch-IB-update [setting]
+    - vci run session-unlock [setting]
+  needs:
+    - job: 1. Блокировка сеансов [job]

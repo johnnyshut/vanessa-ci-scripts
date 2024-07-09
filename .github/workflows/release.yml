@@ -1,3 +1,4 @@
+
 name: Публикация релиза
 
 on:
@@ -10,7 +11,6 @@ jobs:
   release:
     uses: autumn-library/workflows/.github/workflows/release.yml@main
     with:
-      oscript_version: '1.8.4'
       package_mask: "vanessa-ci-scripts-*.ospx"
     secrets:
       PUSH_TOKEN: ${{ secrets.PUSH_TOKEN }}

@@ -1,35 +1,14 @@
 
-Дымовые тесты:
-  except:
-    - schedules
-  stage: test
-  variables:
-    GIT_STRATEGY: none
-  allow_failure: true
-  only:
-    refs:
-      - main
-  tags:
-    - OneS
-  script:
-    - vci run xunit
-  artifacts:
-    reports:
-      junit:
-        build/out/smoke/junit/*.xml
-    paths:
-      - build/out/smoke/allure/ 
-
 Модульные тесты:
-  except:
-    - schedules
   stage: test
   variables:
     GIT_STRATEGY: none
   allow_failure: true
-  only:
-    refs:
-      - main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+    - changes:
+      - src/**/*
+      - tests/**/*
   tags:
     - OneS
   script:
@@ -37,20 +16,23 @@
   artifacts:
     reports:
       junit:
-        build/out/smoke/junit/*.xml
+        out/tests/junit/*.xml
     paths:
-      - build/out/smoke/allure/ 
+      - out/tests/allure/
+  needs:
+    - job: Coverage
 
 Сценарные тесты:
-  except:
-    - schedules
   stage: test
   variables:
     GIT_STRATEGY: none
   allow_failure: true
-  only:
-    refs:
-      - main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+    - changes:
+      - features/**/*
+      - fixtures/**/*
+      - src/**/*
   tags:
     - OneS
   script:
@@ -58,6 +40,32 @@
   artifacts:
     reports:
       junit:
-        build/out/bdd/junit/*.xml
+        out/bdd/junit/*.xml
     paths:
-      - build/out/bdd/allure/ 
+      - out/bdd/allure/
+  needs:
+    - job: Coverage
+
+Дымовые тесты:
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+    - changes:
+      - src/**/*
+  tags:
+    - OneS
+  script:
+    - vci run xunit
+  artifacts:
+    reports:
+      junit:
+        out/smoke/junit/*.xml
+    paths:
+      - out/smoke/allure/ 
+  needs:
+    - job: Coverage
+    - Модульные тесты
+    - Сценарные тесты

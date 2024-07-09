@@ -9,8 +9,9 @@
 
 [Oo]ut
 bdd-*.xml
-[Cc]overage/*
+[Cc]overage
 
+*.log
 *.ospx
 oscript_modules/
 

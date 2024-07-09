@@ -3,32 +3,154 @@ before_script:
   - CHCP 65001
 
 stages:
-  - .pre
   - build
+  - test
   - report
   - release
 
-install-oscript:
+health check:
   stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: on_success
+  tags:
+    - OneS
+  script: 
+    - choco list
+    - scoop list
+  timeout: 10m
+
+install-chocolatey:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
   when: manual
   tags:
     - OneScript
+  script: 
+    - Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+  timeout: 10m
+
+install-chocolatey-curl-dependencies:
+  stage: .pre
   variables:
-    OVM_DOWNLOAD_URL: https://github.com/oscript-library/ovm/releases/download/v1.2.1/ovm.exe
+    GIT_STRATEGY: none
+  when: manual
+  tags:
+    - OneScript
+  script: 
+    - choco install -r --no-progress curl -y
+  timeout: 10m
+  needs:
+    - job: install-chocolatey
+
+install-chocolatey-java-dependencies:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  tags:
+    - OneScript
+  script: 
+    - choco install -r --no-progress libericajdk -y
+  timeout: 10m
+  needs:
+    - job: install-chocolatey
+
+install-scoop:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  tags:
+    - OneScript
+  script: 
+    - Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser; 
+      Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+  timeout: 10m
+
+install-scoop-allure-dependencies:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  tags:
+    - OneScript
+  script: 
+    - scoop install allure
+  timeout: 10m
+  needs:
+    - job: install-scoop
+
+install-scoop-sonar-dependencies:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  tags:
+    - OneScript
+  script:
+    - scoop install sonar-scanner
+  timeout: 10m
+  needs:
+    - job: install-scoop
+
+install-scoop-git-cliff-dependencies:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  tags:
+    - OneScript
+  script:
+    - scoop install git-cliff
+  timeout: 10m
+  needs:
+    - job: install-scoop
+
+install-scoop-releasecli-dependencies:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  tags:
+    - OneScript
+  script:
+    - scoop install gitlab-release-cli
+  timeout: 10m
+  needs:
+    - job: install-scoop
+
+install-oscript:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+    OVM_DOWNLOAD_URL: https://github.com/oscript-library/ovm/releases/download/v1.2.2/ovm.exe
     OPM_DOWNLOAD_URL: https://github.com/oscript-library/opm/releases/download/v1.0.4/opm-1.0.4.ospx
+  when: manual
+  tags:
+    - OneScript
   script: 
     - tools\scripts\install-oscript-local.bat
   timeout: 10m
+  needs:
+    - job: install-chocolatey
+    - job: install-chocolatey-curl-dependencies
 
 install-package-dependencies:
   stage: .pre
+  variables:
+    GIT_STRATEGY: none
   when: manual
   tags:
     - OneScript 
   script: 
-    - opm install opm;
-      opm install
+    # устанавливаем 'opm' и устанавливаем зависимости 'vanessa-ci-scripts' из 'packagedef'
+    - opm install opm; 
+      opm install 
   timeout: 10m
+  needs:
+    - job: install-oscript
 
 build:
   stage: build
@@ -37,7 +159,7 @@ build:
   tags:
     - OneScript
   script: 
-    - tools\scripts\build-package.bat
+    - opm run build
     # get the job id and save it as environment statement
     - echo BUILD_JOB_ID=$CI_JOB_ID >> CI_JOB_ID.env
   timeout: 10m
@@ -52,23 +174,137 @@ build:
       dotenv: CI_JOB_ID.env
     expire_in: 30 day
 
+1testrunner: 
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^develop/'
+    - changes:
+      - src/*
+      - features/*
+      - tasks/*
+      - tests/*
+  tags:
+    - OneScript
+  script: 
+    - opm run test
+  timeout: 10m
+  artifacts:
+    reports:
+      junit:
+        out/junit/*.xml
+    paths:
+      - out/junit/
+    expire_in: 30 day
+
+coverage:
+  stage: test
+  variables:
+    GIT_STRATEGY: none
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - changes:
+      - src/*
+      - features/*
+      - tasks/*
+      - tests/*
+  tags:
+    - OneScript
+  script: 
+    - opm run coverage
+  timeout: 10m
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/coverage.xml
+      junit:
+        out/genericexec/*.xml
+    paths:
+      - coverage/
+      - out/genericexec/
+    expire_in: 30 day
+  needs:
+    - job: 1testrunner
+
 SonarQube:
   stage: report
-  rules:
-    - !reference [build, rules]
   variables:
     GIT_STRATEGY: clone
     SONAR_SCANNER_OPTS: "-Dfile.encoding=UTF8 -Dsun.jnu.encoding=UTF8 -Xmx6G"
   allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - changes:
+      - src/*
+      - features/*
+      - tasks/*
+      - tests/*
   tags:
     - OneScript
   script:
-    - $VERSION = sls -Path .\opm-metadata.xml -Pattern "<Version>(?<ver>\d\.\d\.\d)" -All | % { $_.Matches.Groups } | ? {$_.Name -eq "ver" } | % Value
-    - echo $VERSION
-    - sonar-scanner -D sonar.token=$SONAR_TOKEN -D sonar.projectVersion=$VERSION
+    # - $VERSION = sls -Path .\opm-metadata.xml -Pattern "<Version>(?<ver>\d\.\d\.\d)" -All | % { $_.Matches.Groups } | ? {$_.Name -eq "ver" } | % Value
+    # - sonar-scanner -D sonar.token=$SONAR_TOKEN -D sonar.projectVersion=$VERSION
+    - opm run sonar-scanner
+  timeout: 10m
+  needs:
+    - job: coverage
+      artifacts: true
+
+Allure:
+  stage: report
+  variables:
+    GIT_STRATEGY: none
+  allow_failure: true
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH || $CI_COMMIT_BRANCH =~ /^develop/'
+    - changes:
+      - src/*
+      - features/*
+      - tasks/*
+      - tests/*
+  tags:
+    - OneScript
+  script:
+    - opm run allure-generate
+  timeout: 10m
+  artifacts:
+    paths:
+      - out/allure-report
+  needs:
+    - job: 1testrunner
+
+pages:
+  stage: report
+  variables:
+    GIT_STRATEGY: none
+  allow_failure: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - changes:
+      - src/*
+      - features/*
+      - tasks/*
+      - tests/*
+  tags:
+    - OneScript
+  script:
+    - mkdir public;
+      move out/allure-report public
+  timeout: 10m
+  artifacts:
+    paths:
+      - public
+  needs:
+    - job: Allure
+      artifacts: true
+    - job: SonarQube
 
 package:
   stage: release
+  variables:
+    GIT_STRATEGY: none
   rules:
     - !reference [build, rules]
   tags:
@@ -87,6 +323,8 @@ package:
 
 release:
   stage: release
+  variables:
+    GIT_STRATEGY: none
   rules: 
     - !reference [build, rules]
   tags:
