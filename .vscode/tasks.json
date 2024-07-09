@@ -235,7 +235,7 @@
             "taskName": "OneScript: install from ospx",
             "args": [
                 "opm install ",
-                "-f .\\build\\vanessa-ci-scripts-1.0.1.ospx"
+                "-f .\\build\\vanessa-ci-scripts-1.1.1.ospx"
             ],
             "echoCommand": true,
             "showOutput": "always",

@@ -180,7 +180,7 @@ install-oscript-vci-dependencies:
     - OneS
   script:
     - echo "value = '${VCI_INSTALL_FROM_HUB}'"
-    - 'if (${VCI_INSTALL_FROM_HUB} -eq "true") { echo ''включена установку vci из hub.oscript.io''; opm install vanessa-ci-scripts; } else { echo ''включена установку vci из локального пакета!''; opm install -f C:\tools\vanessa-ci-scripts-1.0.1.ospx; }'
+    - 'if (${VCI_INSTALL_FROM_HUB} -eq "true") { echo ''включена установку vci из hub.oscript.io''; opm install vanessa-ci-scripts; } else { echo ''включена установку vci из локального пакета!''; opm install -f C:\tools\vanessa-ci-scripts-1.1.1.ospx; }'
     - vci run gitsync-plugins-init
   timeout: 10m
   needs:
