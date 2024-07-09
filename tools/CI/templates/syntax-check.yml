@@ -1,19 +1,19 @@
 
 Синтаксический контроль:
-  except:
-    - schedules
   stage: test
   variables:
     GIT_STRATEGY: none
   allow_failure: true
-  only:
-    refs:
-      - main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+    - changes:
+      - src/**/*
   tags:
     - OneS
   script:
     - vci run syntax-check
+  timeout: 5h 00m
   artifacts:
     reports:
       junit:
-        build/out/syntax-check/junit/junit.xml
+        out/syntax-check/junit/junit.xml

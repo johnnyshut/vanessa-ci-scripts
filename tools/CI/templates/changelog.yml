@@ -1,0 +1,28 @@
+
+generate-changelog:
+  # before_script:
+  #   # email и имя пользователя, от чьего имени будет создаваться коммит
+  #   # - git config --global user.email "$GITLAB_USER_EMAIL"
+  #   # - git config --global user.name "$GITLAB_USER_NAME"
+  #   - git fetch --tags -f
+  stage: report
+  variables:
+    GIT_STRATEGY: none
+  allow_failure: true
+  # делаем автозапуск задачи только для мастер ветки.
+  # Так как мы не пушим напрямую в мастер, а используем merge request, то задача выполняется после слияния MR
+  # так же запрещаем задачу, если проставляем тег и для коммитов с "chore(release):" (значит, что команда уже была выполнена)
+  ## except:
+  ##     refs:
+  ##         - tags
+  ##     variables:
+  ##         - $CI_COMMIT_MESSAGE =~ /^chore\(release\):/
+  rules:
+    - if: '$CI_COMMIT_MESSAGE =~ /^chore\(release\):/'
+      when: always
+    - if: '$CI_COMMIT_TAG'
+      when: never
+  tags:
+    - OneS
+  script:
+    - vci run generate-changelog

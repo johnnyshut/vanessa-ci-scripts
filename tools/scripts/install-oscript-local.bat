@@ -12,7 +12,7 @@ chcp 65001
 @REM # - opm install -f ".\tools\onescript-version-manager\opm.ospx"
 
 call mkdir ".\tools\onescript-version-manager"
-call choco install -r --no-progress curl -y
+@REM call choco install -r --no-progress curl -y
 call curl.exe -L %OVM_DOWNLOAD_URL% --output ".\tools\onescript-version-manager\ovm.exe"
 call .\tools\onescript-version-manager\ovm install -c %OVM_INSTALL_VERSION%
 call .\tools\onescript-version-manager\ovm use %OVM_USE_VERSION%

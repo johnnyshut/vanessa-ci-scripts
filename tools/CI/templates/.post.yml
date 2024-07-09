@@ -1,0 +1,12 @@
+
+post:
+  stage: .post
+  variables:
+    GIT_STRATEGY: none
+  allow_failure: true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+  tags:
+    - OneS
+  script:
+    - vci run close-all-1c-process

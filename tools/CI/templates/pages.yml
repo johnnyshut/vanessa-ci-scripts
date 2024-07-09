@@ -1,14 +1,11 @@
 
 pages:
-  except:
-    - schedules
-  stage: deploy
+  stage: report
   variables:
     GIT_STRATEGY: none
   allow_failure: true
-  only:
-    refs:
-      - main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
   tags:
     - OneS
   script:
@@ -16,3 +13,6 @@ pages:
   artifacts:
     paths:
       - public
+  needs:
+    - job: Allure
+    - SonarQube

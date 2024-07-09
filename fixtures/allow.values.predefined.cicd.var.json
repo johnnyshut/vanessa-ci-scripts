@@ -1,0 +1,86 @@
+{
+    "common.yml": {
+        "PREDEFINED": true,
+        "CI_PIPELINE_SOURCE": []
+    },
+    ".pre.yml": {
+        "PREDEFINED": true,
+        "CI_PIPELINE_SOURCE": []
+    },
+    "verbose.yml": {
+        "VCI_VERBOSE": true,
+        "CI_PIPELINE_SOURCE": []
+    },
+    "schedules.yml": {
+        "CI_PIPELINE_SOURCE": [
+            "schedule",
+            "api"
+        ],
+        "CI_COMMIT_TAG": ""
+    },
+    "build.yml": {
+        "CI_PIPELINE_SOURCE": [
+            "merge_request_event",
+            "web"
+        ],
+        "CI_COMMIT_TAG": "*"
+    },
+    "syntax-check.yml": {
+        "CI_PIPELINE_SOURCE": [
+            "merge_request_event",
+            "web"
+        ],
+        "CI_COMMIT_TAG": "*"
+    },
+    "tests.yml": {
+        "CI_PIPELINE_SOURCE": [
+            "merge_request_event",
+            "web"
+        ],
+        "CI_COMMIT_TAG": "*"
+    },
+    "sonar.yml": {
+        "CI_PIPELINE_SOURCE": [
+            "merge_request_event",
+            "web"
+        ],
+        "CI_COMMIT_TAG": "*"
+    },
+    "coverage.yml": {
+        "CI_PIPELINE_SOURCE": [
+            "merge_request_event",
+            "web"
+        ],
+        "CI_COMMIT_TAG": "*"
+    },
+    "allure.yml": {
+        "CI_PIPELINE_SOURCE": [
+            "merge_request_event",
+            "web"
+        ],
+        "CI_COMMIT_TAG": "*"
+    },
+    "pages.yml": {
+        "CI_PIPELINE_SOURCE": [
+            "merge_request_event",
+            "web"
+        ],
+        "CI_COMMIT_TAG": "*"
+    },
+    "changelog.yml": {
+        "CI_PIPELINE_SOURCE": [
+            "merge_request_event",
+            "web"
+        ],
+        "CI_COMMIT_TAG": "*"
+    },
+    "deployment.yml": {
+        "CI_PIPELINE_SOURCE": [],
+        "CI_COMMIT_TAG": "*",
+        "DEPLOY": true
+    },
+    ".post.yml": {
+        "PREDEFINED": true,
+        "CI_PIPELINE_SOURCE": []
+    }
+}

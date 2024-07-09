@@ -1,3 +1,4 @@
+
 stages:
   - schedules
   - templating
@@ -7,19 +8,200 @@ default:
   before_script:
   - CHCP 65001
 
-gitsync:
-  stage: schedules
-  only:
-    - schedules
+health check:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: on_success
+  tags:
+    - OneS
+  script: 
+    - $chocover = chocolatey --version;
+      Write-Host ('chocolatey version', $chocover) -Separator " -> ";
+      Write-Host ' ';
+
+      scoop --version;
+      Write-Host ' ';
+      
+      Write-Host "java version";
+      java --version;
+      Write-Host ' ';
+      
+      $allurever = allure --version;
+      Write-Host ('allure version', $allurever) -Separator " -> ";
+      Write-Host ' ';
+      
+      Write-Host 'sonar-scanner version';
+      sonar-scanner --version;
+      Write-Host ' ';
+      
+      git-cliff --version;
+      Write-Host ' ';
+      
+      choco list;
+      Write-Host ' ';
+      
+      Write-Host 'SCOOP';
+      scoop list;
+      Write-Host ' ';
+      # TODO проверка версии 1С, onescript и vci 
+  timeout: 10m
+
+install-chocolatey:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  tags:
+    - OneS
+  script: 
+    - Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+  timeout: 10m
+
+install-chocolatey-curl-dependencies:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  tags:
+    - OneS
+  script: 
+    - choco install -r --no-progress curl -y --force
+  timeout: 10m
+  needs:
+    - job: install-chocolatey
+
+install-chocolatey-java-dependencies:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  tags:
+    - OneS
+  script: 
+    - choco install -r --no-progress libericajdk -y --force
+  timeout: 10m
+  needs:
+    - job: install-chocolatey
+
+install-scoop:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  tags:
+    - OneS
+  script: 
+    # # not admin
+    # - Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser; 
+    #   Invoke-RestMethod -Uri https://get.scoop.sh | Invoke-Expression
+    # 
+    # # run as admin https://github.com/ScoopInstaller/Install#for-admin
+    - irm get.scoop.sh -outfile 'install.ps1';
+      .\install.ps1 -RunAsAdmin
+    # I don't care about other parameters and want a one-line command
+    - iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
+  timeout: 10m
+
+install-scoop-allure-dependencies:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  tags:
+    - OneS
+  script: 
+    - scoop install allure
+  timeout: 10m
+  needs:
+    - job: install-scoop
+
+install-scoop-sonar-dependencies:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  tags:
+    - OneS
   script:
-    - vci run sync
+    - scoop install sonar-scanner
+  timeout: 10m
+  needs:
+    - job: install-scoop
+
+install-scoop-git-cliff-dependencies:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  tags:
+    - OneS
+  script:
+    - scoop install git-cliff
+  timeout: 10m
+  needs:
+    - job: install-scoop
+
+install-scoop-releasecli-dependencies:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  tags:
+    - OneS
+  script:
+    - scoop install gitlab-release-cli
+  timeout: 10m
+  needs:
+    - job: install-scoop
+
+install-oscript:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+    OVM_DOWNLOAD_URL: https://github.com/oscript-library/ovm/releases/download/v1.2.2/ovm.exe
+    OPM_DOWNLOAD_URL: https://github.com/oscript-library/opm/releases/download/v1.0.4/opm-1.0.4.ospx
+  when: manual
+  tags:
+    - OneS
+  script: 
+    - tools\scripts\install-oscript-local.bat
+  timeout: 10m  
+  needs:
+    - job: install-chocolatey
+    - install-chocolatey-curl-dependencies
+
+install-oscript-vci-dependencies:
+  stage: .pre
+  variables:
+    GIT_STRATEGY: none
+  when: manual
+  tags:
+    - OneS
+  script:
+    - echo "value = '${VCI_INSTALL_FROM_HUB}'"
+    - 'if (${VCI_INSTALL_FROM_HUB} -eq "true") { echo ''включена установку vci из hub.oscript.io''; opm install vanessa-ci-scripts; } else { echo ''включена установку vci из локального пакета!''; opm install -f C:\tools\vanessa-ci-scripts-1.0.1.ospx; }'
+    - vci run gitsync-plugins-init
+  timeout: 10m
+  needs:
+    - job: install-oscript
 
 Генерация пайплайна:
-  except:
-    - schedules
-  variables:
-    GIT_DEPTH: 2
   stage: templating
+  variables:
+    GIT_DEPTH: "1000"  # Tells git to fetch all the branches of the project, required by the analysis task
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"' 
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'  
+    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ /^feature/ && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME != $CI_DEFAULT_BRANCH'
+      when: never
+    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ /^feature/'
+      when: manual
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: manual
+    - when: never
+  tags:
+    - OneS
   script:
     - vanessa-ci-scripts generate
   timeout: 5m
@@ -28,9 +210,17 @@ gitsync:
       - build/generate-config.yml
 
 Исполнение:
-  except:
-    - schedules
   stage: performance
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web" || $CI_PIPELINE_SOURCE == "api"' 
+    - if: '$CI_PIPELINE_SOURCE == "schedule" && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'  
+    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ /^feature/ && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME != $CI_DEFAULT_BRANCH'
+      when: never
+    - if: '$CI_MERGE_REQUEST_SOURCE_BRANCH_NAME =~ /^feature/'
+      when: manual
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: manual
+    - when: never
   trigger:
     include:
       - artifact: build/generate-config.yml

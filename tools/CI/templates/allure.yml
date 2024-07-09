@@ -1,18 +1,24 @@
 
 Allure:
-  except:
-    - schedules
   stage: report
   variables:
     GIT_STRATEGY: none
   allow_failure: true
-  only:
-    refs:
-      - main
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "parent_pipeline"
+    - changes:
+      - features/**/*
+      - fixtures/**/*
+      - src/**/*
+      - tests/**/*
   tags:
     - OneS
   script:
-    - vci run allure
+    - vci run allure-generate
   artifacts:
     paths:
       - build/allure-report
+  needs:
+    - job: Модульные тесты
+    - Сценарные тесты
+    - Дымовые тесты
