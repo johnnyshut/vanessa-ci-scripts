@@ -1,3 +1,4 @@
+[DEPRECATED]
 
 # vanessa-ci-scripts
 
